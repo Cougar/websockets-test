@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta charset="UTF-8">
+<script type="text/javascript">
+
+function $(id) {
+	return document.getElementById(id.substr(1));
+}
+
+function set(id, msg) {
+	$('#' + id).innerHTML = msg;
+}
+
+var ws = new WebSocket("ws://localhost:9999/");
+var ws_ready = 0;
+
+ws.onmessage = function(msg) {
+	var txt = msg.data;
+	set('rxstr', txt);
+}
+    
+ws.onopen = function() {
+	ws_ready = 1;
+	function schedule(i) {
+		setTimeout(function() {
+			var myDate = new Date().toTimeString()
+			var txstr = 'Browser time (' + i + '): ' + myDate;
+			set('txstr', txstr);
+			ws.send(txstr);
+			if (ws_ready) {
+				schedule(i + 1);
+			}
+		}, 1000);            
+	};
+	schedule(1);            
+};
+
+ws.onclose = function() {
+	set('rxstr', 'disconneted');
+	ws_ready = 0;
+}
+
+function send_click(val) {
+	if (ws_ready) {
+		ws.send('button clicked: ' + val);
+	}
+}
+
+</script> </head>
+<body>
+	TX: <div id="txstr">..</div>
+	<input type="button" value="A" onclick="send_click('A')">
+	<input type="button" value="B" onclick="send_click('B')">
+	<input type="button" value="C" onclick="send_click('C')">
+	<br>
+	<br>
+	<br>
+	RX: <div id="rxstr">..</div>
+</body>
+</html>
