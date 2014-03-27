@@ -24,6 +24,7 @@ class ThreadedWebSocketsHandler(SocketServer.StreamRequestHandler):
         self.handshake_done = False
         self.active = True
         self.q = multiprocessing.Queue(1024)
+        self.clientid = ''
         connections.append(self)
 
     def handle(self):
@@ -89,11 +90,18 @@ class ThreadedWebSocketsHandler(SocketServer.StreamRequestHandler):
         self.handshake_done = self.request.send(response)
 
     def on_message(self, message):
-        print "\r", self.thread.getName(), "READ:", message
+        if (self.clientid == ''):
+            import re
+            try:
+                self.clientid = re.search('^clientid:(.+)$', message).group(1)
+            except AttributeError:
+                print "\rERROR: client", self.thread.getName(), "did not send its ID"
+        else:
+           print "\r", self.thread.getName(), self.clientid, "READ:", message
 
     def on_close(self):
         self.active = False
-        print "\r", self.thread.getName(), "closed"
+        print "\r", self.thread.getName(), self.clientid, "closed"
         self.request.close()
         connections.remove(self)
 

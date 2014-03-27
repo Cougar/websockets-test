@@ -13,6 +13,7 @@ function set(id, msg) {
 
 var ws = new WebSocket("ws://localhost:9999/");
 var ws_ready = 0;
+var clientid = 'will be set when connected';
 
 ws.onmessage = function(msg) {
 	var txt = msg.data;
@@ -21,6 +22,9 @@ ws.onmessage = function(msg) {
     
 ws.onopen = function() {
 	ws_ready = 1;
+	clientid = Math.random().toString(36).substring(7);
+	set('clientid', clientid);
+	ws.send('clientid:' + clientid);
 	function schedule(i) {
 		setTimeout(function() {
 			var myDate = new Date().toTimeString()
@@ -48,13 +52,12 @@ function send_click(val) {
 
 </script> </head>
 <body>
-	TX: <div id="txstr">..</div>
+	MY ClientID: <div id="clientid">..</div><p>
+	TX: <div id="txstr">..</div><p>
 	<input type="button" value="A" onclick="send_click('A')">
 	<input type="button" value="B" onclick="send_click('B')">
 	<input type="button" value="C" onclick="send_click('C')">
-	<br>
-	<br>
-	<br>
+	<p>
 	RX: <div id="rxstr">..</div>
 </body>
 </html>
